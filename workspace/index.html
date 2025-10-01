@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz Pengetahuan Umum</title>
+  <meta name="description" content="Game Quiz Pengetahuan Umum untuk tugas mahasiswa. Single-file, ringan, siap deploy di Google Cloud." />
+  <meta name="theme-color" content="#0ea5e9" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: #0f172a;
+      --muted: #94a3b8;
+      --text: #e2e8f0;
+      --brand: #0ea5e9;
+      --brand-2: #22d3ee;
+      --ok: #22c55e;
+      --bad: #ef4444;
+      --ring: rgba(34,211,238,.45);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;
+      background: radial-gradient(1200px 800px at 10% -10%, rgba(34,211,238,.12), transparent 60%),
+                  radial-gradient(800px 600px at 110% 10%, rgba(14,165,233,.12), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+    .app{width: min(920px, 100%)}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.2px}
+    .brand .logo{
+      width:40px;height:40px;border-radius:12px;
+      background: linear-gradient(135deg,var(--brand),var(--brand-2));
+      display:grid;place-items:center;color:white;font-weight:900;
+      box-shadow: 0 8px 30px rgba(14,165,233,.25);
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--card);
+      border:1px solid rgba(148,163,184,.08);
+      border-radius:24px;
+      padding:24px;
+      box-shadow: 0 10px 30px rgba(2,6,23,.45), inset 0 1px 0 rgba(255,255,255,.02);
+    }
+    .hidden{display:none}
+    .progress{
+      height:10px;background:#0b1220;border-radius:999px;overflow:hidden;border:1px solid rgba(148,163,184,.12);
+    }
+    .bar{height:100%;width:0;background: linear-gradient(90deg, var(--brand), var(--brand-2));transition:width .4s ease}
+    .q-text{font-size: clamp(18px, 2.2vw, 24px);line-height:1.3;margin:8px 0 10px}
+    .meta{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:14px;margin:6px 0 18px}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:720px){.grid{grid-template-columns: repeat(2, 1fr)}}
+    .btn{
+      width:100%;text-align:left;padding:14px 16px;border-radius:16px;border:1px solid rgba(148,163,184,.16);
+      background:rgba(148,163,184,.06);color:var(--text);font-weight:600;cursor:pointer;
+      transition: transform .05s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    }
+    .btn:hover{transform:translateY(-1px);border-color: rgba(34,211,238,.45);box-shadow:0 6px 20px rgba(14,165,233,.10)}
+    .btn.correct{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.45)}
+    .btn.wrong{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.45)}
+    .btn[disabled]{opacity:.75;cursor:not-allowed}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:16px}
+    .pill{font-size:13px;color:var(--muted);padding:6px 10px;border-radius:999px;border:1px dashed rgba(148,163,184,.3)}
+    .primary{
+      appearance:none;border:none;cursor:pointer;font-weight:700;border-radius:14px;padding:12px 16px;color:#0b1220;
+      background:linear-gradient(135deg,var(--brand),var(--brand-2));
+      box-shadow: 0 10px 30px rgba(14,165,233,.25);
+    }
+    .primary:disabled{filter:grayscale(.3);opacity:.6;cursor:not-allowed}
+    .footer{margin-top:18px;display:flex;gap:8px;justify-content:space-between;align-items:center}
+    .muted{color:var(--muted)}
+    .center{display:grid;place-items:center;text-align:center;gap:12px;padding:30px 12px}
+    .kbd{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace;background:#0b1220;border:1px solid rgba(148,163,184,.2);padding:2px 8px;border-radius:8px;font-size:12px}
+    a.link{color:var(--brand-2);text-decoration:none}
+    a.link:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div class="brand">
+        <div class="logo">Q</div>
+        <div>
+          <div style="font-size:18px">Quiz Pengetahuan Umum</div>
+          <div class="muted" style="font-size:12px">Single-file • No backend • Siap deploy</div>
+        </div>
+      </div>
+      <button id="btnReset" class="pill" title="Reset skor tersimpan">Reset Skor</button>
+    </header>
+
+    <!-- Start Screen -->
+    <section id="start" class="card">
+      <h1 style="margin:0 0 10px">Selamat datang! 🎓</h1>
+      <p id="desc" class="muted" style="margin:0 0 18px"></p>
+      <div class="row">
+        <div class="pill">Tekan <span class="kbd">Enter</span> untuk mulai</div>
+        <button id="btnStart" class="primary">Mulai Quiz</button>
+      </div>
+    </section>
+
+    <!-- Quiz Screen -->
+    <section id="quiz" class="card hidden" aria-live="polite">
+      <div class="progress" aria-label="Progres">
+        <div id="bar" class="bar" style="width:0%"></div>
+      </div>
+
+      <div class="meta">
+        <span id="count"></span>
+        <span>•</span>
+        <span id="score">Skor: 0</span>
+        <span class="muted" style="margin-left:auto">Tekan angka 1-4 untuk memilih</span>
+      </div>
+
+      <h2 id="question" class="q-text">Pertanyaan akan tampil di sini</h2>
+      <div id="options" class="grid" role="group" aria-label="Pilihan jawaban"></div>
+
+      <div class="footer">
+        <button id="btnNext" class="primary" disabled>Lanjut</button>
+        <span id="explain" class="muted"></span>
+      </div>
+    </section>
+
+    <!-- Result Screen -->
+    <section id="result" class="card hidden center">
+      <h2 style="margin:0">Hasil 🎉</h2>
+      <div id="finalScore" style="font-size:40px;font-weight:800"></div>
+      <div id="hi" class="muted"></div>
+      <div class="row" style="justify-content:center">
+        <button id="btnRetry" class="primary">Main Lagi</button>
+        <button id="btnShare" class="pill">Bagikan Skor</button>
+      </div>
+      <div style="margin-top:14px"><a class="link" href="#review" id="btnReviewLink">Lihat pembahasan singkat</a></div>
+    </section>
+
+    <!-- Review Screen -->
+    <section id="review" class="card hidden">
+      <h3 style="margin:0 0 8px">Pembahasan singkat</h3>
+      <p id="reviewDesc" class="muted" style="margin-top:0"></p>
+      <div id="reviewList" class="grid"></div>
+      <div class="footer">
+        <button class="primary" onclick="goHome()">Kembali ke Awal</button>
+        <span class="muted">Tekan <span class="kbd">R</span> untuk replay kapan saja</span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+  // === DATA SOAL ===
+  const BANK_SOAL = [
+  { q: 'Negara pertama yang menerapkan konstitusi tertulis di dunia adalah…', options: ['Amerika Serikat', 'Inggris', 'Prancis', 'Belanda'], answer: 0, note: 'Konstitusi Amerika Serikat disahkan tahun 1787 dan masih berlaku hingga kini.' },
+  { q: 'Organisasi internasional yang berfokus pada kesehatan dunia adalah…', options: ['UNICEF','FAO','WHO','UNESCO'], answer: 2, note: 'WHO = World Health Organization, berdiri tahun 1948.' },
+  { q: 'Benua yang memiliki jumlah negara paling sedikit adalah…', options: ['Eropa','Amerika Selatan','Australia','Afrika'], answer: 2, note: 'Benua Australia hanya memiliki satu negara utama: Australia.' },
+  { q: 'Teori Big Bang menjelaskan…', options: ['Asal usul kehidupan','Asal mula alam semesta','Pergerakan lempeng bumi','Pembentukan bintang'], answer: 1, note: 'Teori Big Bang menyatakan alam semesta bermula dari ledakan besar sekitar 13,8 miliar tahun lalu.' },
+  { q: 'Negara dengan sistem pemerintahan federal di ASEAN adalah…', options: ['Filipina','Malaysia','Singapura','Thailand'], answer: 1, note: 'Malaysia adalah negara federasi dengan 13 negara bagian dan 3 wilayah federal.' },
+  { q: 'Perang Dunia II berakhir pada tahun…', options: ['1939','1943','1945','1947'], answer: 2, note: 'Perang Dunia II berakhir tahun 1945 setelah Jepang menyerah kepada Sekutu.' },
+  { q: 'Ekspor utama Indonesia yang paling besar kontribusinya adalah…', options: ['Kopi','Kelapa Sawit','Timah','Karet'], answer: 1, note: 'Kelapa sawit menyumbang porsi besar ekspor nonmigas Indonesia.' },
+  { q: 'Planet yang memiliki rotasi paling cepat di tata surya adalah…', options: ['Mars','Saturnus','Jupiter','Merkurius'], answer: 2, note: 'Yupiter berotasi setiap ~10 jam sekali.' },
+  { q: 'Konstitusi tertinggi di Indonesia adalah…', options: ['TAP MPR','UUD 1945','Peraturan Pemerintah','Perpu'], answer: 1, note: 'UUD 1945 menjadi dasar hukum tertinggi negara Indonesia.' },
+  { q: 'Penemu sistem periodik unsur kimia adalah…', options: ['Antoine Lavoisier','Dmitri Mendeleev','Marie Curie','Robert Boyle'], answer: 1, note: 'Dmitri Mendeleev menyusun tabel periodik pertama tahun 1869.' },
+  { q: 'Teori relativitas umum dikemukakan oleh…', options: ['Isaac Newton','Albert Einstein','Max Planck','Niels Bohr'], answer: 1, note: 'Teori ini menjelaskan gravitasi sebagai kelengkungan ruang-waktu.' },
+  { q: 'Bahasa resmi Perserikatan Bangsa-Bangsa (PBB) berjumlah…', options: ['3','4','5','6'], answer: 3, note: 'Ada 6: Inggris, Prancis, Arab, Rusia, Mandarin, Spanyol.' },
+  { q: 'Gunung tertinggi di Indonesia adalah…', options: ['Kerinci','Semeru','Puncak Jaya','Rinjani'], answer: 2, note: 'Puncak Jaya di Papua, ketinggian ±4.884 mdpl.' },
+  { q: 'Salah satu fungsi utama Bank Indonesia adalah…', options: ['Mencetak uang dan mengatur inflasi','Menetapkan harga saham','Mengatur APBN','Mengawasi bursa efek'], answer: 0, note: 'BI menjaga stabilitas nilai rupiah & kebijakan moneter.' },
+  { q: 'Pulau dengan luas terbesar kedua di dunia setelah Greenland adalah…', options: ['Madagaskar','Borneo (Kalimantan)','Papua Nugini','Australia'], answer: 1, note: 'Borneo (Kalimantan) sekitar 743.000 km².' },
+  { q: 'Nama penulis buku “The Origin of Species” adalah…', options: ['Gregor Mendel','Charles Darwin','Jean Lamarck','Louis Pasteur'], answer: 1, note: 'Charles Darwin memperkenalkan teori evolusi melalui seleksi alam.' },
+  { q: 'Mata uang resmi negara Swiss adalah…', options: ['Euro','Franc Swiss','Pound Sterling','Krona'], answer: 1, note: 'Swiss tidak memakai Euro, melainkan Franc Swiss (CHF).' },
+  { q: 'Perusahaan teknologi yang pertama kali mencapai valuasi 3 triliun USD adalah…', options: ['Microsoft','Amazon','Apple','NVIDIA'], answer: 2, note: 'Apple mencatat rekor ini pada 2023.' },
+  { q: 'Sidang pertama BPUPKI berlangsung pada tanggal…', options: ['1 Juni 1945','22 Juni 1945','10 Juli 1945','17 Agustus 1945'], answer: 0, note: 'Sidang pertama BPUPKI membahas dasar negara (Pancasila).' },
+  { q: 'Danau Toba terbentuk akibat…', options: ['Letusan gunung api','Pergerakan lempeng','Erosi air hujan','Patahan bumi'], answer: 0, note: 'Danau Toba terbentuk dari letusan supervulkan ~74.000 tahun lalu.' },
+  { q: 'Bahasa pemrograman yang digunakan untuk pengembangan kecerdasan buatan adalah…', options: ['C','Python','PHP','Go'], answer: 1, note: 'Python populer untuk AI/ML berkat library seperti TensorFlow & PyTorch.' },
+  { q: 'Negara dengan indeks pembangunan manusia (HDI) tertinggi tahun 2024 adalah…', options: ['Norwegia','Swiss','Islandia','Australia'], answer: 1, note: 'Swiss menduduki peringkat pertama HDI 2024 (UNDP).' },
+  { q: 'Jenis energi terbarukan yang paling banyak dimanfaatkan di Indonesia adalah…', options: ['Surya','Air','Angin','Panas Bumi'], answer: 3, note: 'Indonesia memiliki potensi panas bumi terbesar kedua di dunia.' },
+  { q: 'Ilmuwan yang pertama kali menemukan struktur DNA ganda adalah…', options: ['Watson & Crick','Darwin & Mendel','Newton & Pascal','Rutherford & Bohr'], answer: 0, note: 'Watson dan Crick menemukan struktur heliks ganda pada 1953.' },
+  { q: 'Negara dengan ekonomi terbesar di Asia Tenggara adalah…', options: ['Singapura','Thailand','Indonesia','Malaysia'], answer: 2, note: 'Indonesia memiliki GDP terbesar di kawasan ASEAN.' },
+  { q: 'Sistem pemerintahan di Indonesia disebut…', options: ['Parlementer','Presidensial','Monarki Konstitusional','Federal'], answer: 1, note: 'Presidensial: presiden kepala negara sekaligus kepala pemerintahan.' },
+  { q: 'Kitab Sutasoma karya Mpu Tantular mengandung semboyan…', options: ['Bhineka Tunggal Ika','Tut Wuri Handayani','Satyam Eva Jayate','Tri Hita Karana'], answer: 0, note: '“Bhineka Tunggal Ika tan hana dharma mangrwa.”' },
+  { q: 'Negara Afrika pertama yang berhasil merdeka adalah…', options: ['Nigeria','Ghana','Mesir','Afrika Selatan'], answer: 1, note: 'Ghana merdeka dari Inggris pada 1957.' },
+  { q: 'Nama ilmiah manusia modern adalah…', options: ['Homo erectus','Homo sapiens','Homo habilis','Australopithecus'], answer: 1, note: 'Homo sapiens artinya “manusia bijak.”' },
+  { q: 'Perusahaan transportasi daring pertama di Indonesia adalah…', options: ['Grab','Maxim','Uber','Gojek'], answer: 3, note: 'Gojek berdiri tahun 2010 sebagai pionir layanan ojek online.' }
+];
+
+
+  const TOTAL = 30; // jumlah soal
+  let order=[],cursor=0,score=0,picked=false,history=[];
+
+  const $ = sel=>document.querySelector(sel), $$ = sel=>document.querySelectorAll(sel);
+  const startEl=$('#start'), quizEl=$('#quiz'), resultEl=$('#result'), reviewEl=$('#review');
+  const questionEl=$('#question'), optionsEl=$('#options'), countEl=$('#count'), scoreEl=$('#score');
+  const barEl=$('#bar'), explainEl=$('#explain'), finalScoreEl=$('#finalScore'), bestKey='quiz_best_score_v1';
+  const btnStart=$('#btnStart'), btnNext=$('#btnNext'), btnRetry=$('#btnRetry'), btnShare=$('#btnShare');
+  const btnReset=$('#btnReset'), btnReviewLink=$('#btnReviewLink');
+
+  $('#desc').textContent = `Uji wawasanmu. ${TOTAL} soal acak, 1 jawaban benar. Dapatkan skor terbaikmu.`;
+  $('#reviewDesc').textContent = `Rangkuman ${TOTAL} soal terakhir yang kamu kerjakan.`;
+  countEl.textContent = `Soal 1/${TOTAL}`;
+  finalScoreEl.textContent = `0/${TOTAL}`;
+  $('#hi').textContent = 'Skor terbaikmu: 0';
+
+  function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+  function sampleIndices(n,k){const arr=Array.from({length:n},(_,i)=>i);return shuffle(arr).slice(0,k);}
+  function go(section){[startEl,quizEl,resultEl,reviewEl].forEach(el=>el.classList.add('hidden'));section.classList.remove('hidden');}
+  function goHome(){go(startEl);}
+  function start(){
+    order=sampleIndices(BANK_SOAL.length,TOTAL);cursor=0;score=0;picked=false;history=[];
+    scoreEl.textContent=`Skor: ${score}`;barEl.style.width='0%';explainEl.textContent='';btnNext.disabled=true;
+    go(quizEl);render();
+  }
+  function render(){
+    const item=BANK_SOAL[order[cursor]];
+    countEl.textContent=`Soal ${cursor+1}/${TOTAL}`;
+    questionEl.textContent=item.q;optionsEl.innerHTML='';picked=false;btnNext.disabled=true;explainEl.textContent='';
+    item.options.forEach((opt,i)=>{
+      const b=document.createElement('button');b.className='btn';b.type='button';b.dataset.i=i;
+      b.innerHTML=`<strong>${i+1}.</strong> ${opt}`;b.onclick=()=>choose(i);optionsEl.appendChild(b);
+    });
+    barEl.style.width=`${(cursor/TOTAL*100).toFixed(0)}%`;
+  }
+  function choose(i){
+    if(picked)return;
+    const item=BANK_SOAL[order[cursor]],correct=item.answer,buttons=$$('#options .btn');
+    buttons.forEach(b=>b.disabled=true);buttons[correct].classList.add('correct');
+    if(i!==correct){buttons[i].classList.add('wrong');explainEl.textContent=`Jawaban benar: ${item.options[correct]} — ${item.note||''}`;}
+    else{score++;scoreEl.textContent=`Skor: ${score}`;explainEl.textContent=`Mantap! ${item.note||''}`;}
+    history.push({q:item.q,options:item.options,correctIndex:correct,chosenIndex:i});
+    picked=true;btnNext.disabled=false;
+  }
+  function next(){if(!picked)return;cursor<TOTAL-1? (cursor++,render()):finish();}
+  function finish(){
+    const best=Number(localStorage.getItem(bestKey)||0),newBest=Math.max(best,score);
+    localStorage.setItem(bestKey,newBest);
+    finalScoreEl.textContent=`${score}/${TOTAL}`;$('#hi').textContent=`Skor terbaikmu: ${newBest}`;
+    const list=$('#reviewList');list.innerHTML='';
+    history.forEach((h,idx)=>{
+      const div=document.createElement('div');div.className='card';div.style.padding='16px';
+      div.innerHTML=`<div class=\"muted\" style=\"font-size:12px\">Soal ${idx+1}</div>
+      <div style=\"font-weight:600;margin:6px 0 10px\">${h.q}</div>
+      <div style=\"display:flex;gap:8px;flex-wrap:wrap\">
+        <span class=\"pill\" style=\"border-color:rgba(34,197,94,.45)\">Benar: ${h.options[h.correctIndex]}</span>
+        <span class=\"pill\" style=\"border-color:rgba(239,68,68,.45)\">Pilihanmu: ${h.options[h.chosenIndex]||'-'}</span>
+      </div>`;list.appendChild(div);
+    });
+    barEl.style.width='100%';go(resultEl);
+  }
+  btnStart.onclick=start;btnNext.onclick=next;btnRetry.onclick=start;
+  btnShare.onclick=async()=>{const text=`Skor Quiz Pengetahuan Umumku ${score}/${TOTAL}!`;try{
+    if(navigator.share)await navigator.share({title:'Quiz Pengetahuan Umum',text,url:location.href});
+    else{await navigator.clipboard.writeText(text);alert('Teks skor disalin.');}}catch(e){console.warn(e);}
+  };
+  btnReset.onclick=()=>{localStorage.removeItem(bestKey);alert('Skor terbaik direset.');};
+  btnReviewLink.onclick=e=>{e.preventDefault();go(reviewEl);};
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!startEl.classList.contains('hidden'))start();
+    if(['1','2','3','4'].includes(e.key)&&!quizEl.classList.contains('hidden')){
+      const b=$(`#options .btn[data-i=\"${Number(e.key)-1}\"]`);if(b)b.click();}
+    if((e.key==='Enter'||e.key===' ')&&!btnNext.disabled&&!quizEl.classList.contains('hidden'))next();
+    if(['r','R'].includes(e.key))start();
+  });
+  document.title='Quiz Pengetahuan Umum';
+  </script>
+</body>
+</html>
